@@ -83,13 +83,14 @@ export default function App() {
     const query = searchQuery.toLowerCase();
     
     return people.filter(person => {
-      // Allow partial matching on tags, name, or major
+      // Allow partial matching on tags, courses, name, major, or bio
       const matchTags = person.tags.some(tag => tag.toLowerCase().includes(query));
       const matchCourses = person.courses.some(course => course.toLowerCase().includes(query));
       const matchName = person.name.toLowerCase().includes(query);
       const matchMajor = person.major.toLowerCase().includes(query);
+      const matchBio = person.bio.toLowerCase().includes(query);
       
-      return matchTags || matchCourses || matchName || matchMajor;
+      return matchTags || matchCourses || matchName || matchMajor || matchBio;
     });
   }, [people, searchQuery]);
 
