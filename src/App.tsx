@@ -284,10 +284,6 @@ export default function App() {
                 ({filteredPeople.length} results)
               </span>
             </h2>
-            <div className="hidden sm:flex gap-2">
-              <span className="px-3 py-1 bg-white border border-[#DEDCCA] rounded-full text-xs text-[#8B8D7A]">All Majors</span>
-              <span className="px-3 py-1 bg-white border border-[#DEDCCA] rounded-full text-xs text-[#8B8D7A]">All Years</span>
-            </div>
           </div>
 
           {isLoading ? (
