@@ -269,11 +269,6 @@ export default function App() {
             {authMessage && <p className="text-xs text-[#8B8D7A] mt-2">{authMessage}</p>}
           </div>
           
-          <div className="bg-[#F1EFEC] p-6 rounded-3xl hidden md:block">
-            <p className="text-xs italic text-[#7C7E6A] leading-relaxed">
-              "Legacy is about enabling access to knowledge. Share what you know, learn what you don't."
-            </p>
-          </div>
         </aside>
 
         {/* Results Grid */}

@@ -11,8 +11,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       <div className="relative w-full max-w-[600px] px-4 md:px-0">
         <input
           type="text"
-          className="w-full px-6 py-4 bg-white border border-[#DEDCCA] rounded-full shadow-sm text-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 placeholder:text-[#B0AE9D] transition-shadow"
-          placeholder="Search a skill, major, or topic (e.g. 'React', 'Internships')"
+          className="w-full px-6 py-4 bg-white border border-[#DEDCCA] rounded-full shadow-sm text-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 placeholder:text-base placeholder:text-[#B0AE9D] transition-shadow"
+          placeholder="Search a skill, major, or topic (e.g. 'Chemistry', 'Internships')"
           value={value}
           onChange={onChange}
         />
