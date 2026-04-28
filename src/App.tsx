@@ -1,27 +1,66 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { supabase } from './lib/supabase';
+import { User } from '@supabase/supabase-js';
+import { supabase, supabaseConfigError } from './lib/supabase';
 import { NewPerson, Person } from './types';
 import { SearchBar } from './components/SearchBar';
 import { PersonCard } from './components/PersonCard';
 import { AddPersonModal } from './components/AddPersonModal';
+import { ProfileModal } from './components/ProfileModal';
 
 export default function App() {
   const [people, setPeople] = useState<Person[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUser(data.user ?? null);
+    };
+
+    void loadUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const loadStudents = async () => {
       setIsLoading(true);
       setLoadError(null);
 
+      if (supabaseConfigError) {
+        setLoadError(supabaseConfigError);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!supabase) {
+        setLoadError('Supabase client is not initialized.');
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('students')
-        .select('id, name, major, year, tags, bio')
+        .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -46,24 +85,37 @@ export default function App() {
     return people.filter(person => {
       // Allow partial matching on tags, name, or major
       const matchTags = person.tags.some(tag => tag.toLowerCase().includes(query));
+      const matchCourses = person.courses.some(course => course.toLowerCase().includes(query));
       const matchName = person.name.toLowerCase().includes(query);
       const matchMajor = person.major.toLowerCase().includes(query);
       
-      return matchTags || matchName || matchMajor;
+      return matchTags || matchCourses || matchName || matchMajor;
     });
   }, [people, searchQuery]);
 
   const handleAddPerson = async (newPerson: NewPerson) => {
+    if (supabaseConfigError || !supabase) {
+      throw new Error(supabaseConfigError ?? 'Supabase client is not initialized.');
+    }
+    if (!currentUser) {
+      throw new Error('Please sign in first so your profile is editable only by you.');
+    }
+
     const { data, error } = await supabase
       .from('students')
       .insert({
+        user_id: currentUser.id,
         name: newPerson.name,
         major: newPerson.major,
         year: newPerson.year,
         tags: newPerson.tags,
-        bio: newPerson.bio
+        courses: newPerson.courses,
+        bio: newPerson.bio,
+        linkedin: newPerson.linkedin,
+        email: newPerson.email,
+        instagram: newPerson.instagram
       })
-      .select('id, name, major, year, tags, bio')
+      .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
       .single();
 
     if (error) {
@@ -72,6 +124,81 @@ export default function App() {
 
     setPeople(prev => [data, ...prev]);
   };
+
+  const handleUpdatePerson = async (updatedPerson: NewPerson) => {
+    if (supabaseConfigError || !supabase) {
+      throw new Error(supabaseConfigError ?? 'Supabase client is not initialized.');
+    }
+    if (!currentUser || !selectedPerson) {
+      throw new Error('Please sign in to edit your profile.');
+    }
+
+    const { data, error } = await supabase
+      .from('students')
+      .update({
+        name: updatedPerson.name,
+        major: updatedPerson.major,
+        year: updatedPerson.year,
+        tags: updatedPerson.tags,
+        courses: updatedPerson.courses,
+        bio: updatedPerson.bio,
+        linkedin: updatedPerson.linkedin,
+        email: updatedPerson.email,
+        instagram: updatedPerson.instagram
+      })
+      .eq('id', selectedPerson.id)
+      .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    setPeople(prev => prev.map((person) => (person.id === data.id ? data : person)));
+    setSelectedPerson(data);
+    setIsEditModalOpen(false);
+  };
+
+  const handleSignIn = async () => {
+    if (!supabase || !authEmail.trim()) return;
+    setIsAuthLoading(true);
+    setAuthMessage(null);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: authEmail.trim(),
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      setAuthMessage(error.message);
+    } else {
+      setAuthMessage('Check your email for a sign-in link.');
+    }
+
+    setIsAuthLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setAuthMessage('Signed out.');
+  };
+
+  const selectedPersonDraft: NewPerson | null = selectedPerson
+    ? {
+        name: selectedPerson.name,
+        major: selectedPerson.major,
+        year: selectedPerson.year,
+        tags: selectedPerson.tags,
+        courses: selectedPerson.courses,
+        bio: selectedPerson.bio,
+        linkedin: selectedPerson.linkedin,
+        email: selectedPerson.email,
+        instagram: selectedPerson.instagram
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-[#FDFCF9] text-[#2D3027] font-sans flex flex-col overflow-x-hidden">
@@ -86,7 +213,7 @@ export default function App() {
           </p>
         </div>
         <div className="text-right text-xs text-[#8B8D7A] hidden sm:block">
-          <span className="block mb-0.5">Cohort 2024–25</span>
+          <span className="block mb-0.5">Cohort 2025–26</span>
           <span className="block font-medium">Living Directory • {people.length} Members Active</span>
         </div>
       </header>
@@ -106,6 +233,39 @@ export default function App() {
             >
               Add My Profile
             </button>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-[#E6E4D9] shadow-sm">
+            <h3 className="font-serif text-lg text-[#5A5A40] mb-3">My Account</h3>
+            {currentUser ? (
+              <div className="space-y-2">
+                <p className="text-xs text-[#6B705C] break-all">{currentUser.email}</p>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full bg-[#F1EFEC] text-[#5A5A40] py-2 rounded-xl text-sm font-medium hover:bg-[#E6E4D9] transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow"
+                  placeholder="your-email@wustl.edu"
+                />
+                <button
+                  onClick={handleSignIn}
+                  disabled={isAuthLoading || !authEmail.trim()}
+                  className="w-full bg-[#5A5A40] text-white py-2 rounded-xl text-sm font-medium hover:bg-[#4A4A35] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isAuthLoading ? 'Sending...' : 'Send Sign-In Link'}
+                </button>
+              </div>
+            )}
+            {authMessage && <p className="text-xs text-[#8B8D7A] mt-2">{authMessage}</p>}
           </div>
           
           <div className="bg-[#F1EFEC] p-6 rounded-3xl hidden md:block">
@@ -146,7 +306,7 @@ export default function App() {
             >
               <AnimatePresence mode="popLayout">
                 {filteredPeople.map((person, index) => (
-                  <PersonCard key={person.id} person={person} index={index} />
+                  <PersonCard key={person.id} person={person} index={index} onOpen={setSelectedPerson} />
                 ))}
               </AnimatePresence>
             </motion.div>
@@ -175,8 +335,7 @@ export default function App() {
       </main>
 
       {/* Sticky Footer */}
-      <footer className="h-12 bg-[#5A5A40] flex items-center px-4 md:px-12 justify-between text-[10px] text-[#DEDCCA] uppercase tracking-[0.2em] font-medium shrink-0 mt-auto">
-        <span className="hidden sm:inline">A Distributed Expertise Interface</span>
+      <footer className="h-12 bg-[#5A5A40] flex items-center px-4 md:px-12 justify-end text-[10px] text-[#DEDCCA] uppercase tracking-[0.2em] font-medium shrink-0 mt-auto">
         <span>© {new Date().getFullYear()} Ervin Scholars Program</span>
       </footer>
 
@@ -186,6 +345,26 @@ export default function App() {
           <AddPersonModal 
             onClose={() => setIsAddModalOpen(false)} 
             onAdd={handleAddPerson} 
+          />
+        )}
+        {selectedPerson && !isEditModalOpen && (
+          <ProfileModal
+            person={selectedPerson}
+            onClose={() => {
+              setSelectedPerson(null);
+              setIsEditModalOpen(false);
+            }}
+            canEdit={selectedPerson.user_id === currentUser?.id}
+            onEdit={() => setIsEditModalOpen(true)}
+          />
+        )}
+        {isEditModalOpen && selectedPersonDraft && (
+          <AddPersonModal
+            title="Edit My Profile"
+            submitLabel="Save Changes"
+            initialPerson={selectedPersonDraft}
+            onClose={() => setIsEditModalOpen(false)}
+            onAdd={handleUpdatePerson}
           />
         )}
       </AnimatePresence>
