@@ -2,6 +2,7 @@ import { Person } from '../types';
 import { motion } from 'motion/react';
 
 interface PersonCardProps {
+  key?: string;
   person: Person;
   index: number;
 }

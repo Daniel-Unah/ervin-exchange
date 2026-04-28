@@ -6,3 +6,5 @@ export interface Person {
   tags: string[];
   bio: string;
 }
+
+export type NewPerson = Omit<Person, 'id'>;

@@ -1,16 +1,41 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { initialPeople } from './data';
-import { Person } from './types';
+import { supabase } from './lib/supabase';
+import { NewPerson, Person } from './types';
 import { SearchBar } from './components/SearchBar';
 import { PersonCard } from './components/PersonCard';
 import { AddPersonModal } from './components/AddPersonModal';
 
 export default function App() {
-  const [people, setPeople] = useState<Person[]>(initialPeople);
+  const [people, setPeople] = useState<Person[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadStudents = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, name, major, year, tags, bio')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setLoadError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      setPeople(data ?? []);
+      setIsLoading(false);
+    };
+
+    void loadStudents();
+  }, []);
 
   // Derive filtered people dynamically based on the current search query
   const filteredPeople = useMemo(() => {
@@ -28,8 +53,24 @@ export default function App() {
     });
   }, [people, searchQuery]);
 
-  const handleAddPerson = (newPerson: Person) => {
-    setPeople(prev => [newPerson, ...prev]);
+  const handleAddPerson = async (newPerson: NewPerson) => {
+    const { data, error } = await supabase
+      .from('students')
+      .insert({
+        name: newPerson.name,
+        major: newPerson.major,
+        year: newPerson.year,
+        tags: newPerson.tags,
+        bio: newPerson.bio
+      })
+      .select('id, name, major, year, tags, bio')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    setPeople(prev => [data, ...prev]);
   };
 
   return (
@@ -89,7 +130,16 @@ export default function App() {
             </div>
           </div>
 
-          {filteredPeople.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-20 bg-white rounded-3xl border border-[#E6E4D9] shadow-sm text-[#8B8D7A]">
+              Loading students...
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-20 bg-white rounded-3xl border border-[#E6E4D9] shadow-sm">
+              <h3 className="text-lg font-medium text-[#5A5A40] mb-1">Unable to load students</h3>
+              <p className="text-[#8B8D7A] text-sm">{loadError}</p>
+            </div>
+          ) : filteredPeople.length > 0 ? (
             <motion.div 
               layout
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max"

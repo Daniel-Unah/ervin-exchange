@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Person } from '../types';
+import { NewPerson } from '../types';
 import { X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface AddPersonModalProps {
   onClose: () => void;
-  onAdd: (person: Person) => void;
+  onAdd: (person: NewPerson) => Promise<void>;
 }
 
 export function AddPersonModal({ onClose, onAdd }: AddPersonModalProps) {
@@ -16,12 +16,13 @@ export function AddPersonModal({ onClose, onAdd }: AddPersonModalProps) {
     tags: '',
     bio: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newPerson: Person = {
-      id: Date.now().toString(),
+
+    const newPerson: NewPerson = {
       name: formData.name,
       major: formData.major,
       year: formData.year,
@@ -29,8 +30,16 @@ export function AddPersonModal({ onClose, onAdd }: AddPersonModalProps) {
       bio: formData.bio
     };
 
-    onAdd(newPerson);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+      await onAdd(newPerson);
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to add profile.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -86,12 +95,16 @@ export function AddPersonModal({ onClose, onAdd }: AddPersonModalProps) {
             <textarea required rows={3} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow resize-none" placeholder="What are you currently working on?" />
           </div>
 
+          {submitError && (
+            <p className="text-xs text-red-600">{submitError}</p>
+          )}
+
           <div className="pt-6 flex justify-end gap-3 font-sans">
-            <button type="button" onClick={onClose} className="px-4 py-2 flex-1 text-sm font-medium text-[#5A5A40] hover:bg-[#F1EFEC] border border-[#E6E4D9] rounded-xl transition-colors">
+            <button type="button" disabled={isSubmitting} onClick={onClose} className="px-4 py-2 flex-1 text-sm font-medium text-[#5A5A40] hover:bg-[#F1EFEC] border border-[#E6E4D9] rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 flex-1 text-sm font-medium text-white bg-[#5A5A40] rounded-xl hover:bg-[#4A4A35] shadow-sm transition-colors">
-              Add Profile
+            <button type="submit" disabled={isSubmitting} className="px-4 py-2 flex-1 text-sm font-medium text-white bg-[#5A5A40] rounded-xl hover:bg-[#4A4A35] shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? 'Adding...' : 'Add Profile'}
             </button>
           </div>
         </form>
