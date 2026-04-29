@@ -9,6 +9,9 @@ import { PersonCard } from './components/PersonCard';
 import { AddPersonModal } from './components/AddPersonModal';
 import { ProfileModal } from './components/ProfileModal';
 
+const SIGN_IN_COOLDOWN_MS = 60_000;
+const PROFILE_WRITE_COOLDOWN_MS = 15_000;
+
 export default function App() {
   const [people, setPeople] = useState<Person[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +24,8 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [nextSignInAllowedAt, setNextSignInAllowedAt] = useState(0);
+  const [nextProfileWriteAllowedAt, setNextProfileWriteAllowedAt] = useState(0);
 
   useEffect(() => {
     if (!supabase) return;
@@ -104,6 +109,9 @@ export default function App() {
     if (!currentUser) {
       throw new Error('Please sign in first so your profile is editable only by you.');
     }
+    if (Date.now() < nextProfileWriteAllowedAt) {
+      throw new Error('Please wait a few seconds before submitting again.');
+    }
 
     const { data, error } = await supabase
       .from('students')
@@ -129,6 +137,7 @@ export default function App() {
       throw error;
     }
 
+    setNextProfileWriteAllowedAt(Date.now() + PROFILE_WRITE_COOLDOWN_MS);
     setPeople(prev => [data, ...prev]);
   };
 
@@ -138,6 +147,12 @@ export default function App() {
     }
     if (!currentUser || !selectedPerson) {
       throw new Error('Please sign in to edit your profile.');
+    }
+    if (selectedPerson.user_id !== currentUser.id) {
+      throw new Error('You can only edit your own profile.');
+    }
+    if (Date.now() < nextProfileWriteAllowedAt) {
+      throw new Error('Please wait a few seconds before updating again.');
     }
 
     const { data, error } = await supabase
@@ -164,6 +179,7 @@ export default function App() {
       throw error;
     }
 
+    setNextProfileWriteAllowedAt(Date.now() + PROFILE_WRITE_COOLDOWN_MS);
     setPeople(prev => prev.map((person) => (person.id === data.id ? data : person)));
     setSelectedPerson(data);
     setIsEditModalOpen(false);
@@ -171,11 +187,19 @@ export default function App() {
 
   const handleSignIn = async () => {
     if (!supabase || !authEmail.trim()) return;
+    const normalizedEmail = authEmail.trim().toLowerCase();
+    const now = Date.now();
+    if (now < nextSignInAllowedAt) {
+      const seconds = Math.ceil((nextSignInAllowedAt - now) / 1000);
+      setAuthMessage(`Please wait ${seconds}s before requesting another sign-in link.`);
+      return;
+    }
+
     setIsAuthLoading(true);
     setAuthMessage(null);
 
     const { error } = await supabase.auth.signInWithOtp({
-      email: authEmail.trim(),
+      email: normalizedEmail,
       options: {
         emailRedirectTo: window.location.origin
       }
@@ -185,6 +209,7 @@ export default function App() {
       setAuthMessage(error.message);
     } else {
       setAuthMessage('Check your email for a sign-in link.');
+      setNextSignInAllowedAt(now + SIGN_IN_COOLDOWN_MS);
     }
 
     setIsAuthLoading(false);
@@ -266,10 +291,12 @@ export default function App() {
                   onChange={(e) => setAuthEmail(e.target.value)}
                   className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow"
                   placeholder="your-email@wustl.edu"
+                  autoComplete="email"
+                  maxLength={120}
                 />
                 <button
                   onClick={handleSignIn}
-                  disabled={isAuthLoading || !authEmail.trim()}
+                  disabled={isAuthLoading || !authEmail.trim() || Date.now() < nextSignInAllowedAt}
                   className="w-full bg-[#5A5A40] text-white py-2 rounded-xl text-sm font-medium hover:bg-[#4A4A35] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isAuthLoading ? 'Sending...' : 'Send Sign-In Link'}

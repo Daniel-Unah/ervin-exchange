@@ -49,17 +49,24 @@ export function AddPersonModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const normalizedName = formData.name.trim();
+    const normalizedMajor = formData.major.trim();
+    const normalizedBio = formData.bio.trim();
+    const normalizedEmail = formData.email.trim().toLowerCase();
+    const normalizedLinkedin = formData.linkedin.trim();
+    const normalizedInstagram = formData.instagram.trim();
+
     const newPerson: NewPerson = {
-      name: formData.name,
+      name: normalizedName,
       scholarship_program: formData.scholarship_program,
-      major: formData.major,
-      year: formData.year,
+      major: normalizedMajor,
+      year: formData.year.trim(),
       tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
       courses: formData.courses.split(',').map(t => t.trim()).filter(Boolean),
-      bio: formData.bio,
-      linkedin: formData.linkedin,
-      email: formData.email,
-      instagram: formData.instagram
+      bio: normalizedBio,
+      linkedin: normalizedLinkedin,
+      email: normalizedEmail,
+      instagram: normalizedInstagram
     };
 
     try {
@@ -96,13 +103,13 @@ export function AddPersonModal({
         <form onSubmit={handleSubmit} className="p-5 space-y-3 overflow-y-auto">
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Full Name</label>
-            <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. Jane Doe" />
+            <input required type="text" maxLength={80} autoComplete="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. Jane Doe" />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Major</label>
-              <input required type="text" value={formData.major} onChange={e => setFormData({...formData, major: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="Computer Science" />
+              <input required type="text" maxLength={80} value={formData.major} onChange={e => setFormData({...formData, major: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="Computer Science" />
             </div>
             <div>
               <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Graduation Year</label>
@@ -127,34 +134,34 @@ export function AddPersonModal({
 
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Tags (comma-separated)</label>
-            <input required type="text" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. React, UI/UX, Pre-Med" />
+            <input required type="text" maxLength={300} value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. React, UI/UX, Pre-Med" />
           </div>
 
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Courses I can help with (comma-separated)</label>
-            <input required type="text" value={formData.courses} onChange={e => setFormData({...formData, courses: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. Intro to Computer Science, Intro to Psychology, General Chemistry" />
+            <input required type="text" maxLength={400} value={formData.courses} onChange={e => setFormData({...formData, courses: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. Intro to Computer Science, Intro to Psychology, General Chemistry" />
           </div>
 
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Short Bio</label>
-            <textarea required rows={3} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow resize-none" placeholder="What are you currently working on?" />
+            <textarea required rows={3} maxLength={500} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow resize-none" placeholder="What are you currently working on?" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Email</label>
-            <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="name@example.com" />
+            <input required type="email" autoComplete="email" maxLength={120} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="name@example.com" />
           </div>
 
             <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">LinkedIn</label>
-            <input type="url" value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="https://linkedin.com/in/username (optional)" />
+            <input type="url" autoComplete="url" maxLength={200} value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="https://linkedin.com/in/username (optional)" />
           </div>
           </div>
 
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Instagram</label>
-            <input type="url" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="https://instagram.com/username (optional)" />
+            <input type="url" autoComplete="url" maxLength={200} value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="https://instagram.com/username (optional)" />
           </div>
 
           {submitError && (
