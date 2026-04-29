@@ -60,7 +60,9 @@ export default function App() {
 
       const { data, error } = await supabase
         .from('students')
-        .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
+        .select(
+          'id, user_id, name, scholarship_program, major, year, tags, courses, bio, linkedin, email, instagram'
+        )
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -89,8 +91,9 @@ export default function App() {
       const matchName = person.name.toLowerCase().includes(query);
       const matchMajor = person.major.toLowerCase().includes(query);
       const matchBio = person.bio.toLowerCase().includes(query);
-      
-      return matchTags || matchCourses || matchName || matchMajor || matchBio;
+      const matchProgram = person.scholarship_program.toLowerCase().includes(query);
+
+      return matchTags || matchCourses || matchName || matchMajor || matchBio || matchProgram;
     });
   }, [people, searchQuery]);
 
@@ -107,6 +110,7 @@ export default function App() {
       .insert({
         user_id: currentUser.id,
         name: newPerson.name,
+        scholarship_program: newPerson.scholarship_program,
         major: newPerson.major,
         year: newPerson.year,
         tags: newPerson.tags,
@@ -116,7 +120,9 @@ export default function App() {
         email: newPerson.email,
         instagram: newPerson.instagram
       })
-      .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
+      .select(
+        'id, user_id, name, scholarship_program, major, year, tags, courses, bio, linkedin, email, instagram'
+      )
       .single();
 
     if (error) {
@@ -138,6 +144,7 @@ export default function App() {
       .from('students')
       .update({
         name: updatedPerson.name,
+        scholarship_program: updatedPerson.scholarship_program,
         major: updatedPerson.major,
         year: updatedPerson.year,
         tags: updatedPerson.tags,
@@ -148,7 +155,9 @@ export default function App() {
         instagram: updatedPerson.instagram
       })
       .eq('id', selectedPerson.id)
-      .select('id, user_id, name, major, year, tags, courses, bio, linkedin, email, instagram')
+      .select(
+        'id, user_id, name, scholarship_program, major, year, tags, courses, bio, linkedin, email, instagram'
+      )
       .single();
 
     if (error) {
@@ -190,6 +199,7 @@ export default function App() {
   const selectedPersonDraft: NewPerson | null = selectedPerson
     ? {
         name: selectedPerson.name,
+        scholarship_program: selectedPerson.scholarship_program,
         major: selectedPerson.major,
         year: selectedPerson.year,
         tags: selectedPerson.tags,

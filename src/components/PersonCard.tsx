@@ -1,4 +1,4 @@
-import { Person } from '../types';
+import { Person, SCHOLARSHIP_PROGRAM_LABEL } from '../types';
 import { motion } from 'motion/react';
 
 interface PersonCardProps {
@@ -21,9 +21,14 @@ export function PersonCard({ person, index, onOpen }: PersonCardProps) {
     >
       <div className="flex-1">
         <div className="flex justify-between mb-3 items-start gap-2">
-          <h4 className="font-bold text-lg group-hover:text-[#5A5A40] transition-colors leading-tight text-[#2D3027]">
-            {person.name}
-          </h4>
+          <div className="min-w-0">
+            <h4 className="font-bold text-lg group-hover:text-[#5A5A40] transition-colors leading-tight text-[#2D3027]">
+              {person.name}
+            </h4>
+            <p className="text-[10px] font-semibold text-[#8B8D7A] tracking-wide uppercase mt-1 truncate">
+              {SCHOLARSHIP_PROGRAM_LABEL[person.scholarship_program]}
+            </p>
+          </div>
           <span className="text-[10px] font-bold px-2 py-1 bg-[#F1EFEC] rounded-md text-[#8B8D7A] shrink-0">
             C/O {person.year}
           </span>

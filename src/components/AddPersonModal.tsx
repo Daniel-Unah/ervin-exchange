@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
-import { NewPerson } from '../types';
+import { NewPerson, ScholarshipProgram } from '../types';
 import { X } from 'lucide-react';
 import { motion } from 'motion/react';
+
+type AddPersonFormState = {
+  name: string;
+  scholarship_program: ScholarshipProgram;
+  major: string;
+  year: string;
+  tags: string;
+  courses: string;
+  bio: string;
+  linkedin: string;
+  email: string;
+  instagram: string;
+};
 
 interface AddPersonModalProps {
   onClose: () => void;
@@ -18,8 +31,9 @@ export function AddPersonModal({
   title = 'Join the Network',
   submitLabel = 'Add Profile'
 }: AddPersonModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AddPersonFormState>({
     name: initialPerson?.name ?? '',
+    scholarship_program: initialPerson?.scholarship_program ?? 'Ervin',
     major: initialPerson?.major ?? '',
     year: initialPerson?.year ?? '',
     tags: initialPerson?.tags.join(', ') ?? '',
@@ -37,6 +51,7 @@ export function AddPersonModal({
 
     const newPerson: NewPerson = {
       name: formData.name,
+      scholarship_program: formData.scholarship_program,
       major: formData.major,
       year: formData.year,
       tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -65,9 +80,9 @@ export function AddPersonModal({
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-[#FDFCF9] rounded-3xl shadow-xl w-full max-w-md overflow-hidden relative border border-[#E6E4D9]"
+        className="bg-[#FDFCF9] rounded-3xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden relative border border-[#E6E4D9] flex flex-col"
       >
-        <div className="flex justify-between items-center p-6 border-b border-[#E6E4D9]">
+        <div className="flex justify-between items-center p-5 border-b border-[#E6E4D9]">
           <h2 className="font-serif text-xl text-[#5A5A40]">{title}</h2>
           <button 
             type="button" 
@@ -78,13 +93,13 @@ export function AddPersonModal({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-3 overflow-y-auto">
           <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Full Name</label>
             <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="e.g. Jane Doe" />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Major</label>
               <input required type="text" value={formData.major} onChange={e => setFormData({...formData, major: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="Computer Science" />
@@ -92,6 +107,21 @@ export function AddPersonModal({
             <div>
               <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Graduation Year</label>
               <input required type="number" min="2020" max="2100" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="2026" />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Scholarship program</label>
+              <select
+                required
+                value={formData.scholarship_program}
+                onChange={e =>
+                  setFormData({ ...formData, scholarship_program: e.target.value as ScholarshipProgram })
+                }
+                className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow"
+              >
+                <option value="Ervin">Ervin</option>
+                <option value="Rodriguez">Rodriguez</option>
+                <option value="Danforth">Danforth</option>
+              </select>
             </div>
           </div>
 
@@ -110,14 +140,16 @@ export function AddPersonModal({
             <textarea required rows={3} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow resize-none" placeholder="What are you currently working on?" />
           </div>
 
-          <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">Email</label>
             <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="name@example.com" />
           </div>
 
-          <div>
+            <div>
             <label className="text-[10px] uppercase tracking-wider font-bold opacity-50 block mb-1 text-[#2D3027]">LinkedIn</label>
             <input type="url" value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} className="w-full bg-[#FDFCF9] border border-[#E6E4D9] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5A5A40]/30 transition-shadow" placeholder="https://linkedin.com/in/username (optional)" />
+          </div>
           </div>
 
           <div>
@@ -129,7 +161,7 @@ export function AddPersonModal({
             <p className="text-xs text-red-600">{submitError}</p>
           )}
 
-          <div className="pt-6 flex justify-end gap-3 font-sans">
+          <div className="pt-3 flex justify-end gap-3 font-sans sticky bottom-0 bg-[#FDFCF9]">
             <button type="button" disabled={isSubmitting} onClick={onClose} className="px-4 py-2 flex-1 text-sm font-medium text-[#5A5A40] hover:bg-[#F1EFEC] border border-[#E6E4D9] rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               Cancel
             </button>

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
-import { Person } from '../types';
+import { Person, SCHOLARSHIP_PROGRAM_LABEL } from '../types';
 
 interface ProfileModalProps {
   person: Person;
@@ -27,7 +27,10 @@ export function ProfileModal({ person, onClose, canEdit, onEdit }: ProfileModalP
         <div className="flex justify-between items-center p-6 border-b border-[#E6E4D9]">
           <div>
             <h2 className="font-serif text-2xl text-[#5A5A40]">{person.name}</h2>
-            <p className="text-sm text-[#6B705C] mt-1">{person.major} • C/O {person.year}</p>
+            <p className="text-sm text-[#6B705C] mt-1">
+              {SCHOLARSHIP_PROGRAM_LABEL[person.scholarship_program]} • {person.major} • C/O{' '}
+              {person.year}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (
