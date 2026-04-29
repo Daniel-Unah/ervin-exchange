@@ -207,7 +207,7 @@ export default function App() {
       <header className="pt-8 pb-4 px-4 md:px-12 flex justify-between items-end border-b border-[#E6E4D9]">
         <div>
           <h1 className="text-3xl font-serif italic text-[#5A5A40] leading-tight flex items-center">
-            Ervin Exchange
+            OSPeople
           </h1>
           <p className="text-xs tracking-widest uppercase opacity-60 font-semibold mt-1">
             Academic Knowledge Network
